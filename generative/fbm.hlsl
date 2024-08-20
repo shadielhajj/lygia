@@ -7,9 +7,7 @@ use: fbm(<float2|float3> pos)
 options:
     FBM_OCTAVES: numbers of octaves. Default is 4.
     FBM_NOISE_FNC(POS_UV): noise function to use Default 'snoise(POS_UV)' (simplex noise)
-    FBM_VALUE_INITIAL: initial value. Default is 0.
     FBM_LACUNARITY: scalar. Defualt is 2.
-    FBM_AMPLITUDE_INITIAL: initial amplitude value. Default is 0.5
     FBM_GAIN: amplitude scalar. Default is 0.5
 license:
     - Copyright (c) 2021 Patricio Gonzalez Vivo under Prosperity License - https://prosperitylicense.com/versions/3.0.0
@@ -40,17 +38,8 @@ license:
 #define FBM_NOISE_TYPE float
 #endif
 
-
-#ifndef FBM_VALUE_INITIAL
-#define FBM_VALUE_INITIAL 0.0
-#endif
-
 #ifndef FBM_LACUNARITY
 #define FBM_LACUNARITY 2.0
-#endif
-
-#ifndef FBM_AMPLITUDE_INITIAL
-#define FBM_AMPLITUDE_INITIAL 0.5
 #endif
 
 #ifndef FBM_GAIN
@@ -62,8 +51,8 @@ license:
 
 FBM_NOISE_TYPE fbm(in float2 st) {
     // Initial values
-    FBM_NOISE_TYPE value = FBM_VALUE_INITIAL;
-    float amplitude = FBM_AMPLITUDE_INITIAL;
+    FBM_NOISE_TYPE value = 0.0;
+    float amplitude = 1.0;
 
     // Loop of octaves
     for (int i = 0; i < FBM_OCTAVES; i++) {
@@ -76,8 +65,8 @@ FBM_NOISE_TYPE fbm(in float2 st) {
 
 FBM_NOISE_TYPE fbm(in float3 pos) {
     // Initial values
-    FBM_NOISE_TYPE value = FBM_VALUE_INITIAL;
-    float amplitude = FBM_AMPLITUDE_INITIAL;
+    FBM_NOISE_TYPE value = 0.0;
+    float amplitude = 1.0;
 
     // Loop of octaves
     for (int i = 0; i < FBM_OCTAVES; i++) {
@@ -90,8 +79,8 @@ FBM_NOISE_TYPE fbm(in float3 pos) {
 
 FBM_NOISE_TYPE fbm(in float3 pos) {
     // Initial values
-    FBM_NOISE_TYPE value = FBM_VALUE_INITIAL;
-    float amplitude = FBM_AMPLITUDE_INITIAL;
+    FBM_NOISE_TYPE value = 0.0;
+    float amplitude = 1.0;
 
     // Loop of octaves
     for (int i = 0; i < FBM_OCTAVES; i++) {
