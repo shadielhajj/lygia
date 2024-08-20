@@ -10,9 +10,9 @@ options:
     FBM_OCTAVES: numbers of octaves. Default is 4.
     FBM_NOISE_FNC(UV): noise function to use Default 'snoise(UV)' (simplex noise)
     FBM_VALUE_INITIAL: initial value. Default is 0.
-    FBM_SCALE_SCALAR: scalar. Defualt is 2.
-    FBM_AMPLITUD_INITIAL: initial amplitud value. Default is 0.5
-    FBM_AMPLITUD_SCALAR: amplitud scalar. Default is 0.5
+    FBM_LACUNARITY: scalar. Defualt is 2.
+    FBM_AMPLITUDE_INITIAL: initial amplitude value. Default is 0.5
+    FBM_GAIN: amplitude scalar. Default is 0.5
 examples:
     - /shaders/generative_fbm.frag
 license:
@@ -25,15 +25,19 @@ license:
 #endif
 
 #ifndef FBM_NOISE_FNC
-#define FBM_NOISE_FNC(UV) snoise(UV)
+#define FBM_NOISE_FNC snoise
 #endif
 
 #ifndef FBM_NOISE2_FNC
-#define FBM_NOISE2_FNC(UV) FBM_NOISE_FNC(UV)
+#define FBM_NOISE2_FNC FBM_NOISE_FNC
 #endif
 
 #ifndef FBM_NOISE3_FNC
-#define FBM_NOISE3_FNC(UV) FBM_NOISE_FNC(UV)
+#define FBM_NOISE3_FNC FBM_NOISE_FNC
+#endif
+
+#ifndef FBM_NOISE4_FNC
+#define FBM_NOISE4_FNC FBM_NOISE_FNC
 #endif
 
 #ifndef FBM_NOISE_TILABLE_FNC
@@ -52,30 +56,31 @@ license:
 #define FBM_VALUE_INITIAL 0.0
 #endif
 
-#ifndef FBM_SCALE_SCALAR
-#define FBM_SCALE_SCALAR 2.0
+#ifndef FBM_LACUNARITY
+#define FBM_LACUNARITY 2.0
 #endif
 
-#ifndef FBM_AMPLITUD_INITIAL
-#define FBM_AMPLITUD_INITIAL 0.5
+#ifndef FBM_AMPLITUDE_INITIAL
+#define FBM_AMPLITUDE_INITIAL 0.5
 #endif
 
-#ifndef FBM_AMPLITUD_SCALAR
-#define FBM_AMPLITUD_SCALAR 0.5
+#ifndef FBM_GAIN
+#define FBM_GAIN 0.5
 #endif
 
 #ifndef FNC_FBM
 #define FNC_FBM
+
 FBM_NOISE_TYPE fbm(in vec2 st) {
     // Initial values
     FBM_NOISE_TYPE value = FBM_NOISE_TYPE(FBM_VALUE_INITIAL);
-    float amplitud = FBM_AMPLITUD_INITIAL;
+    float amplitude = FBM_AMPLITUDE_INITIAL;
 
     // Loop of octaves
     for (int i = 0; i < FBM_OCTAVES; i++) {
-        value += amplitud * FBM_NOISE2_FNC(st);
-        st *= FBM_SCALE_SCALAR;
-        amplitud *= FBM_AMPLITUD_SCALAR;
+        value += amplitude * FBM_NOISE2_FNC(st);
+        st *= FBM_LACUNARITY;
+        amplitude *= FBM_GAIN;
     }
     return value;
 }
@@ -83,13 +88,27 @@ FBM_NOISE_TYPE fbm(in vec2 st) {
 FBM_NOISE_TYPE fbm(in vec3 pos) {
     // Initial values
     FBM_NOISE_TYPE value = FBM_NOISE_TYPE(FBM_VALUE_INITIAL);
-    float amplitud = FBM_AMPLITUD_INITIAL;
+    float amplitude = FBM_AMPLITUDE_INITIAL;
 
     // Loop of octaves
     for (int i = 0; i < FBM_OCTAVES; i++) {
-        value += amplitud * FBM_NOISE3_FNC(pos);
-        pos *= FBM_SCALE_SCALAR;
-        amplitud *= FBM_AMPLITUD_SCALAR;
+        value += amplitude * FBM_NOISE3_FNC(pos);
+        pos *= FBM_LACUNARITY;
+        amplitude *= FBM_GAIN;
+    }
+    return value;
+}
+
+FBM_NOISE_TYPE fbm(in vec4 pos) {
+    // Initial values
+    FBM_NOISE_TYPE value = FBM_NOISE_TYPE(FBM_VALUE_INITIAL);
+    float amplitude = FBM_AMPLITUDE_INITIAL;
+
+    // Loop of octaves
+    for (int i = 0; i < FBM_OCTAVES; i++) {
+        value += amplitude * FBM_NOISE4_FNC(pos);
+        pos *= FBM_LACUNARITY;
+        amplitude *= FBM_GAIN;
     }
     return value;
 }
