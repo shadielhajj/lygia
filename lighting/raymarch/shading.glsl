@@ -1,4 +1,4 @@
-#include "Nmal.glsl"
+#include "normal.glsl"
 #include "cast.glsl"
 #include "ao.glsl"
 #include "softShadow.glsl"
@@ -30,11 +30,11 @@ license:
 #endif
 
 #ifndef LIGHT_COLOR
-#define LIGHT_COLOR vec3(1.0, 1.0, 1.0)
+#define LIGHT_COLOR vec3(1.30,1.00,0.70)
 #endif
 
 #ifndef RAYMARCH_AMBIENT
-#define RAYMARCH_AMBIENT vec3(1.0, 1.0, 1.0)
+#define RAYMARCH_AMBIENT vec3(0.40,0.60,1.15)
 #endif
 
 #ifndef RAYMARCH_SHADING_FNC
@@ -49,7 +49,7 @@ vec4 raymarchDefaultShading(Material m, ShadingData shadingData) {
     #if defined(LIGHT_DIRECTION)
     vec3 L = normalize(LIGHT_DIRECTION);
     #else
-    vec3 L = normalize(LIGHT_POSITION - m.Pition);
+    vec3 L = normalize(LIGHT_POSITION - m.position);
     #endif
     
     vec3 V = shadingData.V;
@@ -69,8 +69,8 @@ vec4 raymarchDefaultShading(Material m, ShadingData shadingData) {
         float specular = pow(saturate(dot(N, H)), 16.0);
         specular *= diffuse;
         specular *= 0.04+0.96*pow(saturate(1.0-dot(H,L)),5.0);
-        lin += col*2.20*diffuse*vec3(1.30,1.00,0.70);
-        lin += 5.00*specular*vec3(1.30,1.00,0.70)*ks;
+        lin += col*2.20*diffuse*LIGHT_COLOR;
+        lin += 5.00*specular*LIGHT_COLOR*ks;
     }
     // sky
     {
@@ -80,8 +80,8 @@ vec4 raymarchDefaultShading(Material m, ShadingData shadingData) {
         specular *= diffuse;
         specular *= 0.04+0.96*pow(saturate(1.0+dot(N,-V)), 5.0);
         specular *= raymarchSoftShadow(P, R);
-        lin += col*0.60*diffuse*vec3(0.40,0.60,1.15);
-        lin += 2.00*specular*vec3(0.40,0.60,1.30)*ks;
+        lin += col*0.60*diffuse*RAYMARCH_AMBIENT;
+        lin += 2.00*specular*RAYMARCH_AMBIENT*ks;
     }
     // back
     {
@@ -94,7 +94,7 @@ vec4 raymarchDefaultShading(Material m, ShadingData shadingData) {
     {
         float diffuse = pow(saturate(1.0+dot(N,-V)),2.0);
         diffuse *= ao;
-        lin += col*0.25*diffuse;
+        lin += col*0.25*diffuse*vec3(1.0, 1.0, 1.0);
     }
     
     col = lin;
