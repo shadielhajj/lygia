@@ -26,7 +26,8 @@ license:
 #endif
 
 #ifndef LIGHT_COLOR
-#define LIGHT_COLOR vec3(1.30,1.00,0.70)
+// #define LIGHT_COLOR vec3(1.30,1.00,0.70)
+#define LIGHT_COLOR vec3(1.0, 1.0, 1.0)
 #endif
 
 #ifndef LIGHT_DIFFUSE_INTENSITY
@@ -46,7 +47,8 @@ license:
 #endif
 
 #ifndef RAYMARCH_AMBIENT
-#define RAYMARCH_AMBIENT vec3(0.40,0.60,1.15)
+//#define RAYMARCH_AMBIENT vec3(0.40,0.60,1.15)
+#define RAYMARCH_AMBIENT vec3(0.6, 0.6, 0.6)
 #endif
 
 #ifndef AMBIENT_DIFFUSE_INTENSITY
@@ -77,16 +79,17 @@ vec4 raymarchDefaultShading(Material m, ShadingData shadingData) {
     #endif
     
     const float f0 = 0.04;
+    vec3 albedo = m.albedo.rgb;
     vec3 V = shadingData.V;
     vec3 H = normalize(L+V);
     vec3 N = m.normal;
     vec3 P = m.position;
     vec3 R = reflect(-V, N);
-    vec3 lin = vec3(0.0);
-    vec3 albedo = m.albedo.rgb;
-    float ao = raymarchAO(P, N);
     float NoV = saturate(dot(N, V));
     float LoH = saturate(dot(L, H));
+    vec3 result = vec3(0.0, 0.0, 0.0);
+
+    float ao = raymarchAO(P, N);
 
     // sun
     {
@@ -95,29 +98,31 @@ vec4 raymarchDefaultShading(Material m, ShadingData shadingData) {
         float specular = specularBlinnPhong(saturate(dot(N, H)), RAYMARCH_SHADING_SHININESS);
         specular *= diffuse;
         specular *= fresnel(f0, LoH);
-        lin += albedo*diffuse*LIGHT_COLOR*LIGHT_DIFFUSE_INTENSITY;
-        lin += specular*LIGHT_COLOR*LIGHT_SPECULAR_INTENSITY;
+        result += albedo*diffuse*LIGHT_COLOR*LIGHT_DIFFUSE_INTENSITY;
+        result += specular*LIGHT_COLOR*LIGHT_SPECULAR_INTENSITY;
     }
     // sky
     {
-        float diffuse = sqrt(saturate(0.5+0.5*N.y));
+        // float diffuse = sqrt(saturate(0.5+0.5*N.y));
+        float diffuse = saturate(0.5+0.5*N.y);
         diffuse *= ao;
-        float specular = smoothstep(-0.2, 0.2, R.y);
+        vec3 specular = smoothstep(-0.2, 0.2, R.y) * vec3(1.0, 1.0, 1.0);
         specular *= diffuse;
         specular *= fresnel(f0, NoV);
-        specular *= raymarchSoftShadow(P, R);
-        lin += albedo*diffuse*RAYMARCH_AMBIENT*AMBIENT_DIFFUSE_INTENSITY;
-        lin += specular*RAYMARCH_AMBIENT*AMBIENT_SPECULAR_INTENSITY;
+        //specular *= raymarchSoftShadow(P, R);
+        specular *= diffuse;
+        result += albedo*diffuse*RAYMARCH_AMBIENT*AMBIENT_DIFFUSE_INTENSITY;
+        result += specular*RAYMARCH_AMBIENT*AMBIENT_SPECULAR_INTENSITY;
     }
     // back
     {
         vec3 Lback = normalize(vec3(-L.x, L.y, -L.z));
         float diffuse = diffuseLambert(Lback, N);
         diffuse *= ao;
-        lin += albedo*diffuse*BACK_LIGHT_COLOR*BACK_LIGHT_DIFFUSE_INTENSITY;
+        result += albedo*diffuse*BACK_LIGHT_COLOR*BACK_LIGHT_DIFFUSE_INTENSITY;
     }
 
-    return vec4(lin, m.albedo.a);
+    return vec4(result, m.albedo.a);
 }
 
 #endif
