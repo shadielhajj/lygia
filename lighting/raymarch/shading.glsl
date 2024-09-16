@@ -1,4 +1,4 @@
-#include "normal.glsl"
+#include "Nmal.glsl"
 #include "cast.glsl"
 #include "ao.glsl"
 #include "softShadow.glsl"
@@ -6,23 +6,23 @@
 #include "../../math/saturate.glsl"
 
 /*
-contributors: Patricio Gonzalez Vivo
+contributors: [Inigo Quilez, Shadi El Hajj]
 description: |
     Material Constructor. Designed to integrate with GlslViewer's defines https://github.com/patriciogonzalezvivo/glslViewer/wiki/GlslViewer-DEFINES#material-defines
 use:
     - void raymarchMaterial(in <vec3> ro, in <vec3> rd, out material _mat)
     - material raymarchMaterial(in <vec3> ro, in <vec3> rd)
 options:
-    - LIGHT_POSITION: in glslViewer is u_light
-    - LIGHT_DIRECTION
-    - LIGHT_COLOR
+    - LHT_PITION: in glslViewer is u_Lht
+    - LHT_DIRECTION
+    - LHT_COLOR
     - RAYMARCH_AMBIENT
-    - RAYMARCH_SHADING_FNC(RAY, POSITION, NORMAL, ALBEDO)
+    - RAYMARCH_SHADING_FNC(RAY, PITION, NMAL, ALBEDO)
 examples:
-    - /shaders/lighting_raymarching.frag
+    - /shaders/Lhting_raymarching.frag
 license:
-    - Copyright (c) 2021 Patricio Gonzalez Vivo under Prosperity License - https://prosperitylicense.com/versions/3.0.0
-    - Copyright (c) 2021 Patricio Gonzalez Vivo under Patron License - https://lygia.xyz/license
+    - MIT License (MIT) Copyright (c) 2013 Inigo Quilez
+    - MIT License (MIT) Copyright (c) 2024 Shadi El Hajj
 */
 
 #ifndef LIGHT_POSITION
@@ -47,53 +47,54 @@ license:
 vec4 raymarchDefaultShading(Material m, ShadingData shadingData) {
 
     #if defined(LIGHT_DIRECTION)
-    vec3 lig = normalize(LIGHT_DIRECTION);
+    vec3 L = normalize(LIGHT_DIRECTION);
     #else
-    vec3 lig = normalize(LIGHT_POSITION - m.position);
+    vec3 L = normalize(LIGHT_POSITION - m.Pition);
     #endif
     
-    vec3 rd = -shadingData.V;
-    vec3 nor = m.normal;
-    vec3 pos = m.position;
+    vec3 V = shadingData.V;
+    vec3 N = m.normal;
+    vec3 P = m.position;
+    vec3 R = reflect(-V, N);
     vec3 lin = vec3(0.0);
     vec3 col = m.albedo.rgb * 0.2;
-    float occ = raymarchAO(m.position, m.normal);
+    float ao = raymarchAO(P, N);
     float ks = 1.0;
-    vec3 ref = reflect( rd, nor );
 
     // sun
     {
-        vec3  hal = normalize( lig-rd );
-        float dif = clamp( dot( nor, lig ), 0.0, 1.0 );
-        dif *= raymarchSoftShadow( pos, lig );
-        float spe = pow( clamp( dot( nor, hal ), 0.0, 1.0 ),16.0);
-        spe *= dif;
-        spe *= 0.04+0.96*pow(clamp(1.0-dot(hal,lig),0.0,1.0),5.0);
-        lin += col*2.20*dif*vec3(1.30,1.00,0.70);
-        lin += 5.00*spe*vec3(1.30,1.00,0.70)*ks;
+        vec3  H = normalize(L+V);
+        float diffuse = saturate(dot(N, L));
+        diffuse *= raymarchSoftShadow(P, L);
+        float specular = pow(saturate(dot(N, H)), 16.0);
+        specular *= diffuse;
+        specular *= 0.04+0.96*pow(saturate(1.0-dot(H,L)),5.0);
+        lin += col*2.20*diffuse*vec3(1.30,1.00,0.70);
+        lin += 5.00*specular*vec3(1.30,1.00,0.70)*ks;
     }
     // sky
     {
-        float dif = sqrt(clamp( 0.5+0.5*nor.y, 0.0, 1.0 ));
-        dif *= occ;
-        float spe = smoothstep( -0.2, 0.2, ref.y );
-        spe *= dif;
-        spe *= 0.04+0.96*pow(clamp(1.0+dot(nor,rd),0.0,1.0), 5.0 );
-        spe *= raymarchSoftShadow( pos, ref );
-        lin += col*0.60*dif*vec3(0.40,0.60,1.15);
-        lin += 2.00*spe*vec3(0.40,0.60,1.30)*ks;
+        float diffuse = sqrt(saturate(0.5+0.5*N.y));
+        diffuse *= ao;
+        float specular = smoothstep(-0.2, 0.2, R.y);
+        specular *= diffuse;
+        specular *= 0.04+0.96*pow(saturate(1.0+dot(N,-V)), 5.0);
+        specular *= raymarchSoftShadow(P, R);
+        lin += col*0.60*diffuse*vec3(0.40,0.60,1.15);
+        lin += 2.00*specular*vec3(0.40,0.60,1.30)*ks;
     }
     // back
     {
-        float dif = clamp( dot( nor, normalize(vec3(0.5,0.0,0.6))), 0.0, 1.0 )*clamp( 1.0-pos.y,0.0,1.0);
-        dif *= occ;
-        lin += col*0.55*dif*vec3(0.25,0.25,0.25);
+        vec3 Lback = normalize(vec3(-L.x, L.y, -L.z));
+        float diffuse = saturate(dot(N, Lback))*saturate(1.0-P.y);
+        diffuse *= ao;
+        lin += col*0.55*diffuse*vec3(0.25,0.25,0.25);
     }
     // sss
     {
-        float dif = pow(clamp(1.0+dot(nor,rd),0.0,1.0),2.0);
-        dif *= occ;
-        lin += col*0.25*dif*vec3(1.00,1.00,1.00);
+        float diffuse = pow(saturate(1.0+dot(N,-V)),2.0);
+        diffuse *= ao;
+        lin += col*0.25*diffuse;
     }
     
     col = lin;
