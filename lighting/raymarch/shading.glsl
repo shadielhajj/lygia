@@ -45,10 +45,6 @@ license:
 #define FNC_RAYMARCH_DEFAULTSHADING
 
 vec4 raymarchDefaultShading(Material m, ShadingData shadingData) {
-    
-    // This are here to be access by RAYMARCH_AMBIENT 
-    vec3 worldNormal = m.normal;
-    vec3 worldPosition = m.position;
 
     #if defined(LIGHT_DIRECTION)
     vec3 lig = normalize(LIGHT_DIRECTION);
@@ -56,28 +52,53 @@ vec4 raymarchDefaultShading(Material m, ShadingData shadingData) {
     vec3 lig = normalize(LIGHT_POSITION - m.position);
     #endif
     
-    vec3 ref = reflect(-shadingData.V, m.normal);
+    vec3 rd = -shadingData.V;
+    vec3 nor = m.normal;
+    vec3 pos = m.position;
+    vec3 lin = vec3(0.0);
+    vec3 col = m.albedo.rgb * 0.2;
     float occ = raymarchAO(m.position, m.normal);
+    float ks = 1.0;
+    vec3 ref = reflect( rd, nor );
 
-    vec3 hal = normalize(lig + shadingData.V);
-    float amb = saturate(0.5 + 0.5 * m.normal.y);
-    float dif = saturate(dot(m.normal, lig));
-    float bac = saturate(dot(m.normal, normalize(vec3(-lig.x, 0.0, -lig.z)))) * saturate(1.0 - m.position.y);
-    float dom = smoothstep( -0.1, 0.1, ref.y );
-    float fre = pow(saturate(1.0 + dot(m.normal, -shadingData.V)), 2.0);
+    // sun
+    {
+        vec3  hal = normalize( lig-rd );
+        float dif = clamp( dot( nor, lig ), 0.0, 1.0 );
+        dif *= raymarchSoftShadow( pos, lig );
+        float spe = pow( clamp( dot( nor, hal ), 0.0, 1.0 ),16.0);
+        spe *= dif;
+        spe *= 0.04+0.96*pow(clamp(1.0-dot(hal,lig),0.0,1.0),5.0);
+        lin += col*2.20*dif*vec3(1.30,1.00,0.70);
+        lin += 5.00*spe*vec3(1.30,1.00,0.70)*ks;
+    }
+    // sky
+    {
+        float dif = sqrt(clamp( 0.5+0.5*nor.y, 0.0, 1.0 ));
+        dif *= occ;
+        float spe = smoothstep( -0.2, 0.2, ref.y );
+        spe *= dif;
+        spe *= 0.04+0.96*pow(clamp(1.0+dot(nor,rd),0.0,1.0), 5.0 );
+        spe *= raymarchSoftShadow( pos, ref );
+        lin += col*0.60*dif*vec3(0.40,0.60,1.15);
+        lin += 2.00*spe*vec3(0.40,0.60,1.30)*ks;
+    }
+    // back
+    {
+        float dif = clamp( dot( nor, normalize(vec3(0.5,0.0,0.6))), 0.0, 1.0 )*clamp( 1.0-pos.y,0.0,1.0);
+        dif *= occ;
+        lin += col*0.55*dif*vec3(0.25,0.25,0.25);
+    }
+    // sss
+    {
+        float dif = pow(clamp(1.0+dot(nor,rd),0.0,1.0),2.0);
+        dif *= occ;
+        lin += col*0.25*dif*vec3(1.00,1.00,1.00);
+    }
     
-    dif *= raymarchSoftShadow(m.position, lig);
-    dom *= raymarchSoftShadow(m.position, ref);
+    col = lin;
 
-    vec3 env = RAYMARCH_AMBIENT;
-    vec3 shade = vec3(0.0, 0.0, 0.0);
-    shade += 1.30 * dif * LIGHT_COLOR;
-    shade += 0.40 * amb * occ * env;
-    shade += 0.50 * dom * occ * env;
-    shade += 0.50 * bac * occ * 0.25;
-    shade += 0.25 * fre * occ;
-
-    return vec4(m.albedo.rgb * shade, m.albedo.a);
+    return vec4(col, m.albedo.a);
 }
 
 #endif
