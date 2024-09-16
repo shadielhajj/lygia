@@ -7,23 +7,15 @@
 #include "../fresnel.glsl"
 #include "../shadingData/new.glsl"
 #include "../../math/saturate.glsl"
-#include "../toShininess.glsl"
 
 /*
 contributors: [Inigo Quilez, Shadi El Hajj]
 description: |
-    Material Constructor. Designed to integrate with GlslViewer's defines https://github.com/patriciogonzalezvivo/glslViewer/wiki/GlslViewer-DEFINES#material-defines
+    Default raymarching shading function. Based on IQ's outdoors 3-point rig described in https://iquilezles.org/articles/outdoorslighting/ and implemented in https://www.shadertoy.com/view/Xds3zN
 use:
-    - void raymarchMaterial(in <vec3> ro, in <vec3> rd, out material _mat)
-    - material raymarchMaterial(in <vec3> ro, in <vec3> rd)
-options:
-    - LHT_PITION: in glslViewer is u_Lht
-    - LHT_DIRECTION
-    - LHT_COLOR
-    - RAYMARCH_AMBIENT
-    - RAYMARCH_SHADING_FNC(RAY, PITION, NMAL, ALBEDO)
+    - void raymarchDefaultShading(<Material> m, <ShadingData> shadingData)
 examples:
-    - /shaders/Lhting_raymarching.frag
+    - /shaders/lighting_raymarching.frag
 license:
     - MIT License (MIT) Copyright (c) 2013 Inigo Quilez
     - MIT License (MIT) Copyright (c) 2024 Shadi El Hajj
@@ -37,12 +29,32 @@ license:
 #define LIGHT_COLOR vec3(1.30,1.00,0.70)
 #endif
 
+#ifndef LIGHT_DIFFUSE_INTENSITY
+#define LIGHT_DIFFUSE_INTENSITY 2.2*0.3
+#endif
+
+#ifndef LIGHT_SPECULAR_INTENSITY
+#define LIGHT_SPECULAR_INTENSITY 5.0
+#endif
+
 #ifndef BACK_LIGHT_COLOR
 #define BACK_LIGHT_COLOR vec3(0.25,0.25,0.25)
 #endif
 
+#ifndef BACK_LIGHT_DIFFUSE_INTENSITY
+#define BACK_LIGHT_DIFFUSE_INTENSITY 0.55*0.3
+#endif
+
 #ifndef RAYMARCH_AMBIENT
 #define RAYMARCH_AMBIENT vec3(0.40,0.60,1.15)
+#endif
+
+#ifndef AMBIENT_DIFFUSE_INTENSITY
+#define AMBIENT_DIFFUSE_INTENSITY 0.6*0.3
+#endif
+
+#ifndef AMBIENT_SPECULAR_INTENSITY
+#define AMBIENT_SPECULAR_INTENSITY 2.0
 #endif
 
 #ifndef RAYMARCH_SHADING_SHININESS
@@ -71,9 +83,8 @@ vec4 raymarchDefaultShading(Material m, ShadingData shadingData) {
     vec3 P = m.position;
     vec3 R = reflect(-V, N);
     vec3 lin = vec3(0.0);
-    vec3 albedo = m.albedo.rgb * 0.4;
+    vec3 albedo = m.albedo.rgb;
     float ao = raymarchAO(P, N);
-    float ks = 1.0;
     float NoV = saturate(dot(N, V));
     float LoH = saturate(dot(L, H));
 
@@ -84,8 +95,8 @@ vec4 raymarchDefaultShading(Material m, ShadingData shadingData) {
         float specular = specularBlinnPhong(saturate(dot(N, H)), RAYMARCH_SHADING_SHININESS);
         specular *= diffuse;
         specular *= fresnel(f0, LoH);
-        lin += albedo*2.20*diffuse*LIGHT_COLOR;
-        lin += 5.00*specular*LIGHT_COLOR*ks;
+        lin += albedo*diffuse*LIGHT_COLOR*LIGHT_DIFFUSE_INTENSITY;
+        lin += specular*LIGHT_COLOR*LIGHT_SPECULAR_INTENSITY;
     }
     // sky
     {
@@ -95,15 +106,15 @@ vec4 raymarchDefaultShading(Material m, ShadingData shadingData) {
         specular *= diffuse;
         specular *= fresnel(f0, NoV);
         specular *= raymarchSoftShadow(P, R);
-        lin += albedo*0.60*diffuse*RAYMARCH_AMBIENT;
-        lin += 2.00*specular*RAYMARCH_AMBIENT*ks;
+        lin += albedo*diffuse*RAYMARCH_AMBIENT*AMBIENT_DIFFUSE_INTENSITY;
+        lin += specular*RAYMARCH_AMBIENT*AMBIENT_SPECULAR_INTENSITY;
     }
     // back
     {
         vec3 Lback = normalize(vec3(-L.x, L.y, -L.z));
         float diffuse = diffuseLambert(Lback, N);
         diffuse *= ao;
-        lin += albedo*0.55*diffuse*BACK_LIGHT_COLOR;
+        lin += albedo*diffuse*BACK_LIGHT_COLOR*BACK_LIGHT_DIFFUSE_INTENSITY;
     }
 
     return vec4(lin, m.albedo.a);
