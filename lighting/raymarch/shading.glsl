@@ -2,8 +2,12 @@
 #include "cast.glsl"
 #include "ao.glsl"
 #include "softShadow.glsl"
+#include "../diffuse/lambert.glsl"
+#include "../specular/blinnPhong.glsl"
+#include "../fresnel.glsl"
 #include "../shadingData/new.glsl"
 #include "../../math/saturate.glsl"
+#include "../toShininess.glsl"
 
 /*
 contributors: [Inigo Quilez, Shadi El Hajj]
@@ -33,9 +37,17 @@ license:
 #define LIGHT_COLOR vec3(1.30,1.00,0.70)
 #endif
 
+#ifndef BACK_LIGHT_COLOR
+#define BACK_LIGHT_COLOR vec3(0.25,0.25,0.25)
+#endif
+
 #ifndef RAYMARCH_AMBIENT
 #define RAYMARCH_AMBIENT vec3(0.40,0.60,1.15)
 #endif
+
+#ifndef RAYMARCH_SHADING_SHININESS
+#define RAYMARCH_SHADING_SHININESS 16.0
+#endif 
 
 #ifndef RAYMARCH_SHADING_FNC
 #define RAYMARCH_SHADING_FNC raymarchDefaultShading
@@ -52,24 +64,27 @@ vec4 raymarchDefaultShading(Material m, ShadingData shadingData) {
     vec3 L = normalize(LIGHT_POSITION - m.position);
     #endif
     
+    const float f0 = 0.04;
     vec3 V = shadingData.V;
+    vec3 H = normalize(L+V);
     vec3 N = m.normal;
     vec3 P = m.position;
     vec3 R = reflect(-V, N);
     vec3 lin = vec3(0.0);
-    vec3 col = m.albedo.rgb * 0.2;
+    vec3 albedo = m.albedo.rgb * 0.4;
     float ao = raymarchAO(P, N);
     float ks = 1.0;
+    float NoV = saturate(dot(N, V));
+    float LoH = saturate(dot(L, H));
 
     // sun
     {
-        vec3  H = normalize(L+V);
-        float diffuse = saturate(dot(N, L));
+        float diffuse = diffuseLambert(L, N);
         diffuse *= raymarchSoftShadow(P, L);
-        float specular = pow(saturate(dot(N, H)), 16.0);
+        float specular = specularBlinnPhong(saturate(dot(N, H)), RAYMARCH_SHADING_SHININESS);
         specular *= diffuse;
-        specular *= 0.04+0.96*pow(saturate(1.0-dot(H,L)),5.0);
-        lin += col*2.20*diffuse*LIGHT_COLOR;
+        specular *= fresnel(f0, LoH);
+        lin += albedo*2.20*diffuse*LIGHT_COLOR;
         lin += 5.00*specular*LIGHT_COLOR*ks;
     }
     // sky
@@ -78,28 +93,20 @@ vec4 raymarchDefaultShading(Material m, ShadingData shadingData) {
         diffuse *= ao;
         float specular = smoothstep(-0.2, 0.2, R.y);
         specular *= diffuse;
-        specular *= 0.04+0.96*pow(saturate(1.0+dot(N,-V)), 5.0);
+        specular *= fresnel(f0, NoV);
         specular *= raymarchSoftShadow(P, R);
-        lin += col*0.60*diffuse*RAYMARCH_AMBIENT;
+        lin += albedo*0.60*diffuse*RAYMARCH_AMBIENT;
         lin += 2.00*specular*RAYMARCH_AMBIENT*ks;
     }
     // back
     {
         vec3 Lback = normalize(vec3(-L.x, L.y, -L.z));
-        float diffuse = saturate(dot(N, Lback))*saturate(1.0-P.y);
+        float diffuse = diffuseLambert(Lback, N);
         diffuse *= ao;
-        lin += col*0.55*diffuse*vec3(0.25,0.25,0.25);
+        lin += albedo*0.55*diffuse*BACK_LIGHT_COLOR;
     }
-    // sss
-    {
-        float diffuse = pow(saturate(1.0+dot(N,-V)),2.0);
-        diffuse *= ao;
-        lin += col*0.25*diffuse*vec3(1.0, 1.0, 1.0);
-    }
-    
-    col = lin;
 
-    return vec4(col, m.albedo.a);
+    return vec4(lin, m.albedo.a);
 }
 
 #endif
