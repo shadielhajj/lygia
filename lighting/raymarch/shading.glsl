@@ -7,6 +7,7 @@
 #include "../fresnel.glsl"
 #include "../shadingData/new.glsl"
 #include "../../math/saturate.glsl"
+#include "../light/hemisphereEvaluate.glsl"
 
 /*
 contributors: [Inigo Quilez, Shadi El Hajj]
@@ -56,7 +57,7 @@ license:
 #endif
 
 #ifndef AMBIENT_SPECULAR_INTENSITY
-#define AMBIENT_SPECULAR_INTENSITY 2.0
+#define AMBIENT_SPECULAR_INTENSITY 0.5
 #endif
 
 #ifndef RAYMARCH_SHADING_SHININESS
@@ -80,6 +81,7 @@ vec4 raymarchDefaultShading(Material m, ShadingData shadingData) {
     
     const float f0 = 0.04;
     vec3 albedo = m.albedo.rgb;
+    float ao = m.ambientOcclusion;
     vec3 V = shadingData.V;
     vec3 H = normalize(L+V);
     vec3 N = m.normal;
@@ -89,29 +91,33 @@ vec4 raymarchDefaultShading(Material m, ShadingData shadingData) {
     float LoH = saturate(dot(L, H));
     vec3 result = vec3(0.0, 0.0, 0.0);
 
-    float ao = raymarchAO(P, N);
-
     // sun
     {
         float diffuse = diffuseLambert(L, N);
         diffuse *= raymarchSoftShadow(P, L);
+        result += albedo*diffuse*LIGHT_COLOR*LIGHT_DIFFUSE_INTENSITY;
+
         float specular = specularBlinnPhong(saturate(dot(N, H)), RAYMARCH_SHADING_SHININESS);
         specular *= diffuse;
         specular *= fresnel(f0, LoH);
-        result += albedo*diffuse*LIGHT_COLOR*LIGHT_DIFFUSE_INTENSITY;
         result += specular*LIGHT_COLOR*LIGHT_SPECULAR_INTENSITY;
     }
     // sky
     {
-        // float diffuse = sqrt(saturate(0.5+0.5*N.y));
-        float diffuse = saturate(0.5+0.5*N.y);
+        vec3 diffuse = vec3(0.0, 0.0, 0.0);
+        lightHemisphereEvaluate(N, diffuse);
         diffuse *= ao;
+        result += albedo*diffuse*AMBIENT_DIFFUSE_INTENSITY;
+
         vec3 specular = smoothstep(-0.2, 0.2, R.y) * vec3(1.0, 1.0, 1.0);
         specular *= diffuse;
         specular *= fresnel(f0, NoV);
-        //specular *= raymarchSoftShadow(P, R);
-        specular *= diffuse;
-        result += albedo*diffuse*RAYMARCH_AMBIENT*AMBIENT_DIFFUSE_INTENSITY;
+
+        Material ref = raymarchCast(P, R);
+        if (ref.valid) {
+            specular *= ref.albedo.rgb * diffuseLambert(L, N) * LIGHT_COLOR * LIGHT_DIFFUSE_INTENSITY;
+        }
+
         result += specular*RAYMARCH_AMBIENT*AMBIENT_SPECULAR_INTENSITY;
     }
     // back
