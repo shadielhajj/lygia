@@ -14,7 +14,6 @@
 contributors: Patricio Gonzalez Vivo
 description: Generic Material Structure
 options:
-    - SCENE_BACK_SURFACE
     - SHADING_MODEL_CLEAR_COAT
     - MATERIAL_HAS_CLEAR_COAT_NORMAL
     - SHADING_MODEL_IRIDESCENCE
@@ -44,10 +43,6 @@ struct Material {
     float   sdf;
     bool    valid;
 #endif
-
-    #if defined(SCENE_BACK_SURFACE)
-    vec3    normal_back;    // world normal of the back surface of the model
-    #endif
     
     vec3    ior;            // Index of Refraction
 

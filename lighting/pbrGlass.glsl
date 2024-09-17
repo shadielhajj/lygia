@@ -21,7 +21,6 @@ use:
     - <vec4> glass(<Material> material)
 options:
     - SPECULAR_FNC: specularGaussian, specularBeckmann, specularCookTorrance (default), specularPhongRoughness, specularBlinnPhongRoughness (default on mobile)
-    - SCENE_BACK_SURFACE: null
     - LIGHT_POSITION: in GlslViewer is u_light
     - LIGHT_DIRECTION: null
     - LIGHT_COLOR in GlslViewer is u_lightColor
@@ -48,11 +47,7 @@ license:
 vec4 pbrGlass(const Material mat, ShadingData shadingData) {
     // Shading Data
     // ------------
-#if defined(SCENE_BACK_SURFACE)
-    vec3 No     = normalize(mat.normal - mat.normal_back); // Normal out is the difference between the front and back normals
-#else
-    vec3 No     = mat.normal;                            // Normal out
-#endif
+    vec3 No     = mat.normal
     vec3 eta    = ior2eta(mat.ior);
     vec3 f0     = vec3(0.04, 0.04, 0.04);
     shadingData.N = mat.normal;

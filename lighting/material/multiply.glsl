@@ -14,9 +14,6 @@ void materialMultiply(Material mat, float f, Material r) {
     r.emissive = mat.emissive * f;
     r.position = mat.position * f;
     r.normal = mat.normal * f;
-    #if defined(SCENE_BACK_SURFACE)
-    r.normal_back = mat.normal_back * f;
-    #endif
     r.ior = mat.ior * f;
     r.roughness = mat.roughness * f;
     r.metallic = mat.metallic * f;

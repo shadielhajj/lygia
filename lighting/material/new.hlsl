@@ -20,7 +20,6 @@ use:
     - <material> materialNew()
 options:
     - SURFACE_POSITION
-    - SCENE_BACK_SURFACE
     - SHADING_MODEL_CLEAR_COAT
     - MATERIAL_HAS_CLEAR_COAT_NORMAL
     - SHADING_MODEL_IRIDESCENCE
@@ -53,16 +52,6 @@ void materialNew(out Material _mat) {
     _mat.sdf                = RAYMARCH_MAX_DIST;
     _mat.valid              = true;
 #endif
-    
-    #if defined(SCENE_BACK_SURFACE) && defined(RESOLUTION)
-        float4 back_surface       = SAMPLER_FNC(SCENE_BACK_SURFACE, gl_FragCoord.xy / RESOLUTION);
-        _mat.normal_back        = back_surface.xyz;
-    #else
-        #if defined(SCENE_BACK_SURFACE)
-        // Naive assumption of the back surface
-        _mat.normal_back        = -_mat.normal;
-        #endif
-    #endif
 
     // PBR Properties
     _mat.albedo             = materialAlbedo();

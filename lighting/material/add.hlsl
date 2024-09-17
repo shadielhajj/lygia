@@ -15,10 +15,6 @@ void materialAdd(Material a, Material b, Material r) {
     r.position = a.position + b.position;
     r.normal = a.normal + b.normal;
 
-    #if defined(SCENE_BACK_SURFACE)
-    r.normal_back = a.normal_back + b.normal_back;
-    #endif
-
     r.ior = a.ior + b.ior;
     r.roughness = a.roughness + b.roughness;
     r.metallic = a.metallic + b.metallic;

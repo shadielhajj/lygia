@@ -7,7 +7,6 @@ use:
     - <material> materialZero()
 options:
     - SURFACE_POSITION
-    - SCENE_BACK_SURFACE
     - SHADING_MODEL_CLEAR_COAT
     - MATERIAL_HAS_CLEAR_COAT_NORMAL
     - SHADING_MODEL_IRIDESCENCE
@@ -32,9 +31,6 @@ void materialZero(out Material _mat) {
     _mat.valid = true;
 #endif
 
-#if defined(SCENE_BACK_SURFACE)
-    _mat.normal_back = vec3(0.0);
-#endif
     _mat.ior = vec3(0.0);
     _mat.roughness = 0.0;
     _mat.metallic = 0.0;
