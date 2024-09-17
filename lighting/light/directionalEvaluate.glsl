@@ -37,7 +37,7 @@ void lightDirectionalEvaluate(LightDirectional L, Material mat, inout ShadingDat
     vec3 spec = specular(shadingData);
 
     vec3 lightContribution = L.color * L.intensity * shadow * shadingData.NoL;
-    shadingData.directDiffuse  += max(vec3(0.0, 0.0, 0.0), shadingData.diffuseColor * lightContribution * dif) * (1.0-mat.transmission);
+    shadingData.directDiffuse  += max(vec3(0.0, 0.0, 0.0), shadingData.diffuseColor * lightContribution * dif);
     shadingData.directSpecular += max(vec3(0.0, 0.0, 0.0), lightContribution * spec) * shadingData.energyCompensation;
 
     #ifdef SHADING_MODEL_SUBSURFACE

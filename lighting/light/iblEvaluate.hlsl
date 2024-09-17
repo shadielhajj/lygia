@@ -61,7 +61,7 @@ float3 energyCompensation = float3(1.0, 1.0, 1.0);
 
     shadingData.energyCompensation = energyCompensation;
 
-    shadingData.indirectDiffuse = Fd * IBL_LUMINANCE * (1.0-mat.transmission);
+    shadingData.indirectDiffuse = Fd * IBL_LUMINANCE;
     shadingData.indirectSpecular = Fr * IBL_LUMINANCE;
 }
 

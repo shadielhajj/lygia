@@ -65,11 +65,19 @@ vec4 pbr(const Material mat, ShadingData shadingData) {
         }
         #endif
     }
-
     
     // Final Sum
     // ---------
     vec4 color  = vec4(0.0, 0.0, 0.0, 1.0);
+
+    // Refraction
+#if defined(SHADING_MODEL_TRANSMISSION)
+    if (mat.transmission > 0.0) {
+        shadingData.indirectDiffuse *= (1.0-mat.transmission);
+        shadingData.directDiffuse *= (1.0-mat.transmission);
+        color.rgb  += transparent(mat, shadingData)*mat.transmission;
+    }
+#endif
 
     // Diffuse
     color.rgb  += shadingData.indirectDiffuse;
@@ -78,9 +86,6 @@ vec4 pbr(const Material mat, ShadingData shadingData) {
     // Specular
     color.rgb  += shadingData.indirectSpecular;
     color.rgb  += shadingData.directSpecular; 
-
-    // Refraction
-    color.rgb   += transparent(mat, shadingData)*mat.transmission;
 
     color.rgb  += mat.emissive;
     color.a     = mat.albedo.a;

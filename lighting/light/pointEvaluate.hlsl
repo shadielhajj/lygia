@@ -43,7 +43,7 @@ void lightPointEvaluate(LightPoint L, Material mat, inout ShadingData shadingDat
     if (L.falloff > 0.0)
         lightContribution *= falloff(Ldist, L.falloff);
 
-    shadingData.directDiffuse  += max(float3(0.0, 0.0, 0.0), shadingData.diffuseColor * lightContribution * dif) * (1.0-mat.transmission);
+    shadingData.directDiffuse  += max(float3(0.0, 0.0, 0.0), shadingData.diffuseColor * lightContribution * dif);
     shadingData.directSpecular += max(float3(0.0, 0.0, 0.0), lightContribution * spec) * shadingData.energyCompensation;
 
     // TODO:

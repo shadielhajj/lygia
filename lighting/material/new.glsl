@@ -57,12 +57,15 @@ void materialNew(out Material _mat) {
     _mat.emissive           = materialEmissive();
     _mat.roughness          = materialRoughness();
     _mat.metallic           = materialMetallic();
-    _mat.transmission       = 0.0;
     _mat.reflectance        = 0.5;
 
     _mat.ior                = vec3(IOR_GLASS_RGB);      // Index of Refraction
 
     _mat.ambientOcclusion   = materialOcclusion();
+
+#if defined(SHADING_MODEL_TRANSMISSION)
+    _mat.transmission = 0.0;
+#endif
 
 #if defined (SHADING_MODEL_CLEAR_COAT)
     _mat.clearCoat          = 0.0;

@@ -19,8 +19,11 @@ void materialAdd(Material a, Material b, Material r) {
     r.roughness = a.roughness + b.roughness;
     r.metallic = a.metallic + b.metallic;
     r.reflectance = a.reflectance + b.reflectance;
-    r.transmission = a.transmission + b.transmission;
     r.ambientOcclusion = a.ambientOcclusion + b.ambientOcclusion;
+
+    #if defined(SHADING_MODEL_TRANSMISSION)
+    r.transmission = a.transmission + b.transmission;
+    #endif
 
     #if defined(SHADING_MODEL_CLEAR_COAT)
     r.clearCoat = a.clearCoat + b.clearCoat;
