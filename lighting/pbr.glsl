@@ -80,7 +80,7 @@ vec4 pbr(const Material mat, ShadingData shadingData) {
     color.rgb  += shadingData.directSpecular; 
 
     // Refraction
-    color.rgb   += transparent(mat, shadingData);
+    color.rgb   += transparent(mat, shadingData)*mat.transmission;
 
     color.rgb  += mat.emissive;
     color.a     = mat.albedo.a;

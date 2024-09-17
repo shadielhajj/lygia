@@ -75,7 +75,7 @@ float4 pbr(const Material mat, ShadingData shadingData) {
     color.rgb  += shadingData.directDiffuse;
 
     // Refraction
-    color.rgb   += transparent(mat, shadingData);
+    color.rgb   += transparent(mat, shadingData)*mat.transmission;
 
     // Specular
     color.rgb  += shadingData.indirectSpecular;
