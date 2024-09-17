@@ -35,6 +35,7 @@ void materialZero(out Material _mat) {
     _mat.roughness = 0.0;
     _mat.metallic = 0.0;
     _mat.reflectance = 0.5;
+    _mat.transmission = 0.0;
     _mat.ambientOcclusion = 0.0;
 
 #if defined (SHADING_MODEL_CLEAR_COAT)

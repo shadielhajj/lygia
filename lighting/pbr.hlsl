@@ -8,6 +8,7 @@
 
 #include "shadingData/new.hlsl"
 #include "material.hlsl"
+#include "transparent.hlsl"
 #include "light/new.hlsl"
 #include "light/resolve.hlsl"
 #include "light/iblEvaluate.hlsl"
@@ -22,7 +23,6 @@ options:
     - LIGHT_POSITION: in GlslViewer is u_light
     - LIGHT_COLOR in GlslViewer is u_lightColor
     - CAMERA_POSITION: in GlslViewer is u_camera
-    - RAYMARCH_AO: enabled raymarched ambient occlusion
 examples:
     - /shaders/lighting_raymarching_pbr.frag
 license:
@@ -74,9 +74,13 @@ float4 pbr(const Material mat, ShadingData shadingData) {
     color.rgb  += shadingData.indirectDiffuse;
     color.rgb  += shadingData.directDiffuse;
 
+    // Refraction
+    color.rgb   += transparent(mat, shadingData);
+
     // Specular
     color.rgb  += shadingData.indirectSpecular;
     color.rgb  += shadingData.directSpecular; 
+
     color.rgb  += mat.emissive;
     color.a     = mat.albedo.a;
 

@@ -57,6 +57,7 @@ void materialNew(out Material _mat) {
     _mat.emissive           = materialEmissive();
     _mat.roughness          = materialRoughness();
     _mat.metallic           = materialMetallic();
+    _mat.transmission       = 0.0;
     _mat.reflectance        = 0.5;
 
     _mat.ior                = vec3(IOR_GLASS_RGB);      // Index of Refraction

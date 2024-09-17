@@ -50,6 +50,7 @@ struct Material
     float roughness;
     float metallic;
     float reflectance;
+    float transmission;
     float ambientOcclusion; // default 1.0
 
 #if defined(SHADING_MODEL_CLEAR_COAT)

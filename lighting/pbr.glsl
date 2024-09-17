@@ -9,6 +9,7 @@
 #include "../math/saturate.glsl"
 #include "shadingData/new.glsl"
 #include "material.glsl"
+#include "transparent.glsl"
 #include "light/new.glsl"
 #include "light/resolve.glsl"
 #include "light/iblEvaluate.glsl"
@@ -23,7 +24,6 @@ options:
     - LIGHT_POSITION: in GlslViewer is u_light
     - LIGHT_COLOR in GlslViewer is u_lightColor
     - CAMERA_POSITION: in GlslViewer is u_camera
-    - RAYMARCH_AO: enabled raymarched ambient occlusion
 examples:
     - /shaders/lighting_raymarching_pbr.frag
 license:
@@ -78,6 +78,10 @@ vec4 pbr(const Material mat, ShadingData shadingData) {
     // Specular
     color.rgb  += shadingData.indirectSpecular;
     color.rgb  += shadingData.directSpecular; 
+
+    // Refraction
+    color.rgb   += transparent(mat, shadingData);
+
     color.rgb  += mat.emissive;
     color.a     = mat.albedo.a;
 
