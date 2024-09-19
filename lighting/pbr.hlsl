@@ -8,7 +8,7 @@
 
 #include "shadingData/new.hlsl"
 #include "material.hlsl"
-#include "transparent.hlsl"
+#include "refraction.hlsl"
 #include "light/new.hlsl"
 #include "light/resolve.hlsl"
 #include "light/iblEvaluate.hlsl"
@@ -75,7 +75,7 @@ float4 pbr(const Material mat, ShadingData shadingData) {
     if (mat.transmission > 0.0) {
         shadingData.indirectDiffuse *= (1.0-mat.transmission);
         shadingData.directDiffuse *= (1.0-mat.transmission);
-        color.rgb  += transparent(mat, shadingData)*mat.transmission;
+        color.rgb  += refraction(mat, shadingData)*mat.transmission;
     }
 #endif
 
