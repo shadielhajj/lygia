@@ -36,7 +36,7 @@ float3 refraction(Material mat, ShadingData shadingData) {
 
     const float dispersion = 0.05;
     float halfSpread = (mat.ior.g - 1.0) * 0.025 * dispersion;
-    float3 iors = float3(mat.ior.g - halfSpread, mat.ior.g, mat.ior.g + halfSpread);
+    float3 iors = float3(mat.ior.r - halfSpread, mat.ior.g, mat.ior.b + halfSpread);
 
     float3 Ft = float3(0.0, 0.0, 0.0);
     Ft.r = refractionSample(mat.normal, shadingData.V, mat.roughness, iors.r).r;
