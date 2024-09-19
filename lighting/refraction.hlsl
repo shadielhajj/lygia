@@ -1,5 +1,5 @@
 #include "envMap.hlsl"
-#include "common/envBRDFApprox.hlsl"
+#include "ior/2eta.hlsl"
 
 /*
 contributors: Shadi El Hajj
@@ -16,35 +16,26 @@ license: MIT License (MIT) Copyright (c) 2024 Shadi El Hajj
 #ifndef FNC_REFRACTION
 #define FNC_REFRACTION
 
-void refractionSolidSphere(Material mat, ShadingData shadingData, out float3 direction) {
+float3 refractionSolidSphere(Material mat, ShadingData shadingData) {
 
     const float thickness = 1.0;
-    const float airIor = 1.0;
-    float3 etaIR = airIor / mat.ior;
-    float3 etaRI = mat.ior / airIor;
-    float3 r = -shadingData.V;
-    r = refract(r, mat.normal, etaIR);
+    float3 eta = ior2eta(mat.ior);
+    float3 r = refract(-shadingData.V, mat.normal, eta);
     float NoR = dot(mat.normal, r);
     float d = thickness * -NoR;
     float3 n1 = normalize(NoR * r - mat.normal * 0.5);
-    direction = refract(r, n1,  etaRI);
+    return refract(r, n1,  mat.ior);
 }
 
 float3 refraction(Material mat, ShadingData shadingData) {
 
-    float3 direction = float3(0.0, 0.0, 0.0);
-    refractionSolidSphere(mat, shadingData, direction);
-
-    const float airIor = 1.0;
-    float3 etaIR = airIor / mat.ior;
-    float perceptualRoughness = lerp(mat.roughness, 0.0, saturate(etaIR * 3.0 - 2.0));
+    float3 direction = refractionSolidSphere(mat, shadingData);
+    float3 eta = ior2eta(mat.ior);
+    float perceptualRoughness = lerp(mat.roughness, 0.0, saturate(eta * 3.0 - 2.0));
 
     float3 Ft = envMap(direction, perceptualRoughness) * IBL_LUMINANCE;
     Ft *= shadingData.diffuseColor;
-
-    float2 E = envBRDFApprox(shadingData.NoV, shadingData.roughness);    
-    float3 specularColorE = shadingData.specularColor * E.x + E.y;
-    Ft *= 1.0 - specularColorE;
+    Ft *= 1.0 - shadingData.specularColorE;
 
     return Ft;
 }

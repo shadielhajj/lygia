@@ -23,6 +23,7 @@ struct ShadingData {
    vec3 diffuseColor;
    vec3 specularColor;
 
+   vec3 specularColorE;
    vec3 energyCompensation;
 
    vec3 directDiffuse;

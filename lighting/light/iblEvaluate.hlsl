@@ -22,9 +22,9 @@ license: MIT License (MIT) Copyright (c) 2024 Shadi El Hajj
 
 void lightIBLEvaluate(Material mat, inout ShadingData shadingData) {
 
-#if !defined(IBL_IMPORTANCE_SAMPLING) || defined(SCENE_SH_ARRAY)
+#if !defined(IBL_IMPORTANCE_SAMPLING) || defined(SCENE_SH_ARRAY) || defined(SHADING_MODEL_TRANSMISSION)
     float2 E = envBRDFApprox(shadingData.NoV, shadingData.roughness);    
-    float3 specularColorE = shadingData.specularColor * E.x + E.y;
+    shadingData.specularColorE = shadingData.specularColor * E.x + E.y;
 #endif
 
 float3 energyCompensation = float3(1.0, 1.0, 1.0);
@@ -35,7 +35,7 @@ float3 energyCompensation = float3(1.0, 1.0, 1.0);
 #else
     float3 R = lerp(shadingData.R, shadingData.N, shadingData.roughness*shadingData.roughness);
     float3 Fr = envMap(R, shadingData.roughness, mat.metallic);
-    Fr *= specularColorE;
+    Fr *= shadingData.specularColorE;
 #endif
     Fr *= energyCompensation;
 
@@ -44,13 +44,13 @@ float3 energyCompensation = float3(1.0, 1.0, 1.0);
 #endif
 
 #if defined(SCENE_SH_ARRAY)
-    float3 Fd = shadingData.diffuseColor * (1.0-specularColorE);
+    float3 Fd = shadingData.diffuseColor * (1.0-shadingData.specularColorE);
     Fd  *= sphericalHarmonics(shadingData.N);
 #elif defined(IBL_IMPORTANCE_SAMPLING)
     float3 Fd = shadingData.diffuseColor;
     Fd *= envMap(shadingData.N, 1.0);
 #else
-    float3 Fd = shadingData.diffuseColor * (1.0-specularColorE);
+    float3 Fd = shadingData.diffuseColor * (1.0-shadingData.specularColorE);
     Fd *= envMap(shadingData.N, 1.0);
 #endif
 
